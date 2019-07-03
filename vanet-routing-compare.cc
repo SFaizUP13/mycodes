@@ -935,7 +935,7 @@ public:
   void SaveConfig (std::string configFilename);
 };
 
-ConfigStoreHelper::ConfigStoreHelper ()
+ConfigStoreHelper::ConfigStoreHelper ()                       //<<<<<<<<<<<< we do not need this section as its only for saving configurations  03/07 <<<<<<<
 {
 }
 
@@ -1260,7 +1260,7 @@ VanetRoutingExperiment::VanetRoutingExperiment ()                               
 void
 VanetRoutingExperiment::SetDefaultAttributeValues ()
 {
-  // handled in constructor                                                     <<<<<<<<<<<<<<<<<<< Check in detail this section, may be not needed  18/06  <<<<<<<<<<<<<<<<<<<<<
+  // handled in constructor
 }
 
 // important configuration items stored in global values
@@ -1318,7 +1318,7 @@ static ns3::GlobalValue g_verbose ("VRCverbose",
                                    ns3::MakeUintegerChecker<uint32_t> ());
 static ns3::GlobalValue g_scenario ("VRCscenario",
                                     "Scenario",
-                                    ns3::UintegerValue (1),
+                                    ns3::UintegerValue (2),
                                     ns3::MakeUintegerChecker<uint32_t> ());
 static ns3::GlobalValue g_routingTables ("VRCroutingTables",
                                          "Dump routing tables at t=5 seconds 0=no;1=yes",
@@ -1475,7 +1475,7 @@ VanetRoutingExperiment::ConfigureApplications ()
 void                                                                                   // <<<<<<<<<<<<<  -----  Tracing config  <<<<<<<<<<<<<<<<
 VanetRoutingExperiment::ConfigureTracing ()
 {
-  WriteCsvHeader ();
+  //WriteCsvHeader ();                                              <<<<<<<<<<<<<<<<<   commented  03/07  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<
   SetupLogFile ();
   SetupLogging ();
 
@@ -1518,7 +1518,7 @@ VanetRoutingExperiment::ProcessOutputs ()                                       
     {
       NS_LOG_UNCOND ("BSM_CPDR1=" << bsm_Cpdr1 <<  "BSM_CPDR2=" << bsm_Cpdr2 << "BSM_CPDR3=" << bsm_Cpdr3 << " Goodput=" << averageRoutingGoodputKbps << "Kbps MAC/PHY-oh=" << mac_phy_oh);
     }
-
+//
   std::ofstream out (m_CSVfileName2.c_str (), std::ios::app);
 
   out << bsm_Cpdr1 << ","
@@ -1835,7 +1835,7 @@ VanetRoutingExperiment::CommandSetup (int argc, char **argv)                    
   m_txSafetyRange1 = txDist1;
   m_txSafetyRange2 = txDist2;
   m_txSafetyRange3 = txDist3;
-  // load configuration info from config-store
+  // load configuration info from config-store                     <<<<<<<<<<<<<<<<<< <<  Need more details look  03/07 <<<<<<<<<<<<<<<<
   ConfigStoreHelper configStoreHelper;
   configStoreHelper.LoadConfig (m_loadConfigFilename);
   // transfer config-store values to config parameters
@@ -1849,7 +1849,7 @@ VanetRoutingExperiment::CommandSetup (int argc, char **argv)                    
   m_txSafetyRange3 = txDist3;
 }
 
-void
+void                                         //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<   Need to look it more detail 03/07  <<<<<<<<<<<<<<<<<<<<<<<<<<<
 VanetRoutingExperiment::SetupLogFile ()
 {
   // open log file for output
@@ -1870,16 +1870,17 @@ VanetRoutingExperiment::ConfigureDefaults ()
 {
   Config::SetDefault ("ns3::OnOffApplication::PacketSize",StringValue ("64"));
   Config::SetDefault ("ns3::OnOffApplication::DataRate",  StringValue (m_rate));
+  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",StringValue (m_phyMode));     // using this from below without any condition <<<<<<<<<<<<<<
 
-  //Set Non-unicastMode rate to unicast mode
-  if (m_80211mode == 2)
+ /* //Set Non-unicastMode rate to unicast mode
+  if (m_80211mode == 2)                             <<<<<<<<<<<<<<<<<<<<<<  disabled this section 03/07 not need it <<<<<<<<<<<<<<<<<
     {
       Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",StringValue (m_phyModeB));
     }
   else
     {
       Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",StringValue (m_phyMode));
-    }
+    }*/
 }
 
 void
@@ -1893,35 +1894,6 @@ VanetRoutingExperiment::SetupAdhocMobilityNodes ()                              
       // initially assume all nodes are not moving
       WaveBsmHelper::GetNodesMoving ().resize (m_nNodes, 0);
     }
-  /*else if (m_mobility == 2)                                                                     // <<<<<<<<<<<<<<<< ------ Can remove this section in case of using SUMO traces
-    {
-      MobilityHelper mobilityAdhoc;
-
-      ObjectFactory pos;
-      pos.SetTypeId ("ns3::RandomBoxPositionAllocator");
-      pos.Set ("X", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=1500.0]"));
-      pos.Set ("Y", StringValue ("ns3::UniformRandomVariable[Min=0.0|Max=300.0]"));
-      // we need antenna height uniform [1.0 .. 2.0] for loss model
-      pos.Set ("Z", StringValue ("ns3::UniformRandomVariable[Min=1.0|Max=2.0]"));
-
-      Ptr<PositionAllocator> taPositionAlloc = pos.Create ()->GetObject<PositionAllocator> ();
-      m_streamIndex += taPositionAlloc->AssignStreams (m_streamIndex);
-
-      std::stringstream ssSpeed;
-      ssSpeed << "ns3::UniformRandomVariable[Min=0.0|Max=" << m_nodeSpeed << "]";
-      std::stringstream ssPause;
-      ssPause << "ns3::ConstantRandomVariable[Constant=" << m_nodePause << "]";
-      mobilityAdhoc.SetMobilityModel ("ns3::RandomWaypointMobilityModel",
-                                      "Speed", StringValue (ssSpeed.str ()),
-                                      "Pause", StringValue (ssPause.str ()),
-                                      "PositionAllocator", PointerValue (taPositionAlloc));
-      mobilityAdhoc.SetPositionAllocator (taPositionAlloc);
-      mobilityAdhoc.Install (m_adhocTxNodes);
-      m_streamIndex += mobilityAdhoc.AssignStreams (m_adhocTxNodes, m_streamIndex);
-
-      // initially assume all nodes are moving
-      WaveBsmHelper::GetNodesMoving ().resize (m_nNodes, 1);
-    }*/
 
   // Configure callback for logging
   Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
@@ -1932,7 +1904,7 @@ void
 VanetRoutingExperiment::SetupAdhocDevices ()                                                      // <<<<<<<<<< -------- Propagation loss Models for wireless ---- <<<<<<<<
 {
 
-  if (m_lossModel == 1)
+ /* if (m_lossModel == 1)                                     <<<<<<<<<<<<<<<<<<<<<<  disabled this section 03/07 not need it <<<<<<<<<<<<<<<<<
     {
       m_lossModelName = "ns3::FriisPropagationLossModel";
     }
@@ -1953,7 +1925,7 @@ VanetRoutingExperiment::SetupAdhocDevices ()                                    
       // Unsupported propagation loss model.
       // Treating as ERROR
       NS_LOG_ERROR ("Invalid propagation loss model specified.  Values must be [1-4], where 1=Friis;2=ItuR1411Los;3=TwoRayGround;4=LogDistance");
-    }
+    }*/
 
   // frequency                                                                                     //  <<<<<<<<<<<<<<<<<<< -----------  Setting Frequency Band ----- <<<<<<<<<<<<<
   double freq = 5.9e9;
@@ -1961,7 +1933,10 @@ VanetRoutingExperiment::SetupAdhocDevices ()                                    
   // Setup propagation models                                                                      // <<<<<<<<<<<<<<<<< ---------   Setting Propagation Model ------- <<<<<<<<<<<
   YansWifiChannelHelper wifiChannel;
   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  if (m_lossModel == 3)
+  wifiChannel.AddPropagationLoss ("ns3::FriisPropagationLossModel", "Frequency", DoubleValue (freq));  //<<<<<<<< defined this from below section 03/07  <<<<<<<<
+
+
+  /*if (m_lossModel == 3)                         <<<<<<<<<<<<<<<<<<<<<<  disabled this section 03/07 <<<<<<<<<<<<<<<<<
     {
       // two-ray requires antenna height (else defaults to Friss)
       wifiChannel.AddPropagationLoss (m_lossModelName, "Frequency", DoubleValue (freq), "HeightAboveZ", DoubleValue (1.5));
@@ -1970,7 +1945,7 @@ VanetRoutingExperiment::SetupAdhocDevices ()                                    
     {
       wifiChannel.AddPropagationLoss (m_lossModelName, "Frequency", DoubleValue (freq));
     }
-
+*/
   // Propagation loss models are additive.
   if (m_fading != 0)
     {
@@ -2004,14 +1979,9 @@ VanetRoutingExperiment::SetupAdhocDevices ()                                    
 
   WifiHelper wifi;
 
-  // Setup 802.11b stuff
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
+  // Setup 802.11b stuff     <<<<<<<<<<<<<<   we don't need this so removed   <<<<<<<<<<<<<<<<
 
-  wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode",StringValue (m_phyModeB),
-                                "ControlMode",StringValue (m_phyModeB));
-
-  // Setup 802.11p stuff
+  // Setup 802.11p stuff     <<<<<<<<<<<<<<<<<<<<<<  Need only one of the below  <<<<<<<<<<<<<<
   wifi80211p.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
                                       "DataMode",StringValue (m_phyMode),
                                       "ControlMode",StringValue (m_phyMode));
@@ -2021,11 +1991,11 @@ VanetRoutingExperiment::SetupAdhocDevices ()                                    
                                       "DataMode",StringValue (m_phyMode),
                                       "ControlMode",StringValue (m_phyMode));
 
-  // Set Tx Power                                                                   // <<<<<<<<<<<<<<<<<    ---------   Transmission Power -------- <<<<<<<<<<<<
-  //wifiPhy.Set ("TxPowerStart",DoubleValue (m_txp));
-  //wifiPhy.Set ("TxPowerEnd", DoubleValue (m_txp));
-  wavePhy.Set ("TxPowerStart",DoubleValue (m_txp));
-  wavePhy.Set ("TxPowerEnd", DoubleValue (m_txp));
+  // Set Tx Power                                                                   // <<<<<<<<<<<<<<<<<  I did not feel any change of this right now  ---------   Transmission Power -------- <<<<<<<<<<<<
+  wifiPhy.Set ("TxPowerStart",DoubleValue (m_txp));
+  wifiPhy.Set ("TxPowerEnd", DoubleValue (m_txp));
+  //wavePhy.Set ("TxPowerStart",DoubleValue (m_txp));
+ // wavePhy.Set ("TxPowerEnd", DoubleValue (m_txp));
 
   // Add an upper mac and disable rate control
   WifiMacHelper wifiMac;
@@ -2042,17 +2012,17 @@ VanetRoutingExperiment::SetupAdhocDevices ()                                    
     {
       m_adhocTxDevices = wifi80211p.Install (wifiPhy, wifi80211pMac, m_adhocTxNodes);
     }
-  else
+ /* else                                                      <<<<<<<<<<<<<<<<<  we are not using this. we are using one of the above, have to confirm 03/07 <<<<<<<<<<<<<<<<
     {
       m_adhocTxDevices = wifi.Install (wifiPhy, wifiMac, m_adhocTxNodes);
-    }
+    }*/
 
   if (m_asciiTrace != 0)
     {
       AsciiTraceHelper ascii;
       Ptr<OutputStreamWrapper> osw = ascii.CreateFileStream ( (m_trName + ".tr").c_str ());
       wifiPhy.EnableAsciiAll (osw);
-      wavePhy.EnableAsciiAll (osw);
+   //   wavePhy.EnableAsciiAll (osw);                   <<<<<<<<<<<<<<<<<<<<    commented 03/07  <<<<<<<<<<<<<<<<<<<<<<<<<<
     }
   if (m_pcap != 0)
     {
@@ -2067,10 +2037,10 @@ VanetRoutingExperiment::SetupWaveMessages ()
   // WAVE PHY mode
   // 0=continuous channel; 1=channel-switching
   int chAccessMode = 0;
-  if (m_80211mode == 3)
+ /* if (m_80211mode == 3)                                <<<<<<<<<<<<<<<<<<<<   ---- we don't need channel switching 03/07 <<<<<<<<<<<<<
     {
       chAccessMode = 1;
-    }
+    }*/
 
   m_waveBsmHelper.Install (m_adhocTxInterfaces,
                            Seconds (m_TotalSimTime),
@@ -2111,65 +2081,19 @@ VanetRoutingExperiment::SetupScenario ()                                        
   // certain parameters may be further overridden
   // i.e. specify a scenario, override tx power.
 
- /* if (m_scenario == 1)
-    {
-      // 40 nodes in RWP 300 m x 1500 m synthetic highway, 10s
-      m_traceFile = "";
-      m_logFile = "";
-      m_mobility = 2;
-      if (m_nNodes == 156)                                                                // <<<<<<<<<<----- I did not understand the its logic
-        {
-          m_nNodes = 20;                                                                  //  <<<<<<< ----- I have changed it from 40 to 20
-        }
-      if (m_TotalSimTime == 300.01)                                                       // <<<<<<<<<<----- I did not understand  its logic
-        {
-          m_TotalSimTime = 10.0;
-        }
-    }*/
    if (m_scenario == 2)
     {
       // Realistic vehicular trace in 4.6 km x 3.0 km suburban Zurich                       //  <<<<<<<<<<<<<<   --------I have Selected my own trace file <<<<<<
       // "low density, 99 total vehicles"
-      m_traceFile = "scratch/arczMobilityL200.xml"; //"src/wave/examples/low99-ct-unterstrass-1day.filt.7.adj.mob";
+      m_traceFile = "scratch/arcMobility103.xml"; //"src/wave/examples/low99-ct-unterstrass-1day.filt.7.adj.mob";
                                                         //  <<<<<<<<<<  ----- I have commented it <<<<<<<<<<<<<<<<<<<
       m_mobility = 1;
-      m_nNodes = 61;
-      m_TotalSimTime = 50.01;
+      m_nNodes = 103;
+      m_TotalSimTime = 100.01;
       m_nodeSpeed = 0;
       m_nodePause = 0;
     }
 }
-
-void
-VanetRoutingExperiment::WriteCsvHeader ()                                                             // <<<<<<<<< -------  Setting CSV output file  <<<<<<<
-{
-  //blank out the last output file and write the column headers
-  std::ofstream out (m_CSVfileName.c_str ());
-  out << "SimulationSecond," <<
-    "ReceiveRate," <<
-    "PacketsReceived," <<
-    "NumberOfSinks," <<
-    "TransmissionPower," <<
-    "WavePktsSent," <<
-    "WavePtksReceived," <<
-    "WavePktsPpr," <<
-    "ExpectedWavePktsReceived," <<
-    "ExpectedWavePktsInCoverageReceived," <<
-    "BSM_PDR1," <<
-    "BSM_PDR2," <<
-	"BSM_PDR3," <<
-    std::endl;
-  out.close ();
-
-  std::ofstream out2 (m_CSVfileName2.c_str ());
-  out2 << "BSM_PDR1,"
-       << "BSM_PDR2,"
-	   << "BSM_PDR3,"
-
-       << std::endl;
-  out2.close ();
-}
-
 
 
 int
